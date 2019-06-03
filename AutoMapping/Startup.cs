@@ -10,11 +10,14 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SimpleInjector;
 
 namespace AutoMapping
 {
     public class Startup
     {
+        private Container container = new Container();
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -33,6 +36,15 @@ namespace AutoMapping
             });
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddSimpleInjector(container, options =>
+            {
+                // AddAspNetCore() wraps web requests in a Simple Injector scope.
+                options.AddAspNetCore()
+                    // Ensure activation of a specific framework type to be created by
+                    // Simple Injector instead of the built-in configuration system.
+                    .AddControllerActivation()
+                    .AddViewComponentActivation();
+            });
             var config = new AutoMapper.MapperConfiguration
                 (cfg =>
             {
@@ -60,6 +72,11 @@ namespace AutoMapping
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseCookiePolicy();
+            app.UseSimpleInjector(container);
+            InitializeContainer();
+
+            // Always verify the container
+            container.Verify();
 
             app.UseMvc(routes =>
             {
@@ -67,6 +84,12 @@ namespace AutoMapping
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
+        }
+
+        private void InitializeContainer()
+        {
+            // Add application services. For instance:
+            container.Register<ICustomerRepository, CustomerRepository>(Lifestyle.Scoped);
         }
     }
 }

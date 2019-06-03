@@ -61,6 +61,14 @@
               "target": "Package",
               "version": "[2.2.0, )",
               "autoReferenced": true
+            },
+            "SimpleInjector": {
+              "target": "Package",
+              "version": "[4.6.0, )"
+            },
+            "SimpleInjector.Integration.AspNetCore.Mvc.Core": {
+              "target": "Package",
+              "version": "[4.6.0, )"
             }
           },
           "imports": [

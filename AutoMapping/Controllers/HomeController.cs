@@ -12,17 +12,17 @@ namespace AutoMapping.Controllers
     public class HomeController : Controller
     {
         private readonly IMapper _mapper;
+        private readonly ICustomerRepository _customerRepository;
 
-        public HomeController(IMapper mapper)
+        public HomeController(IMapper mapper, ICustomerRepository customerRepository)
         {
             _mapper = mapper;
+            _customerRepository = customerRepository;
         }
 
         public IActionResult Index()
         {
-            var cust = new List<Customer>();
-            cust.Add(new Customer { LastName = "Redford", FirstName = "Robert", Id = 1 });
-            cust.Add(new Customer { LastName = "Presley", FirstName = "Elvis", Id = 2 });
+            var cust = _customerRepository.GetCustomers();
 
             var mappedCust = _mapper.Map<List<CustomerModel>>(cust);
             return View(mappedCust);

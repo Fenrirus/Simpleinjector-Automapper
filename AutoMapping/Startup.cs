@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using AutoMapper;
 using AutoMapping.Automapper;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleInjector;
+using SimpleInjector.Lifestyles;
 
 namespace AutoMapping
 {
@@ -36,6 +33,7 @@ namespace AutoMapping
             });
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            container.Options.DefaultScopedLifestyle = new AsyncScopedLifestyle();
             services.AddSimpleInjector(container, options =>
             {
                 // AddAspNetCore() wraps web requests in a Simple Injector scope.
@@ -45,14 +43,15 @@ namespace AutoMapping
                     .AddControllerActivation()
                     .AddViewComponentActivation();
             });
-            var config = new AutoMapper.MapperConfiguration
+            // Jeśli użyjemy Simpleinjector rejestracja automappera w tym miejscu nie jest wymagana
+            /*var config = new MapperConfiguration
                 (cfg =>
             {
                 cfg.AddProfile(new AutomapperProfile());
             }
                 );
             var mapper = config.CreateMapper();
-            services.AddSingleton(mapper);
+            services.AddSingleton(mapper);*/
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -75,6 +74,9 @@ namespace AutoMapping
             app.UseSimpleInjector(container);
             InitializeContainer();
 
+            // Automapper
+            container.RegisterSingleton(() => GetMapper(container));
+
             // Always verify the container
             container.Verify();
 
@@ -90,6 +92,12 @@ namespace AutoMapping
         {
             // Add application services. For instance:
             container.Register<ICustomerRepository, CustomerRepository>(Lifestyle.Scoped);
+        }
+
+        private IMapper GetMapper(Container container)
+        {
+            var mp = container.GetInstance<MapperProvider>();
+            return mp.GetMapper();
         }
     }
 }
